@@ -51,7 +51,6 @@ udp_recv_channel {
 
 tcp_accept_channel {
   port = {{.Port}}
-  gzip_output = no
 }
 `)
 
