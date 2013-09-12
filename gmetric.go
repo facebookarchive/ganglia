@@ -72,7 +72,6 @@ func (v valueType) encode(w io.Writer, val interface{}) {
 	case ValueFloat32, ValueFloat64:
 		writeString(w, fmt.Sprintf("%f", val))
 	}
-	panic("not reached")
 }
 
 // Represents a collection of errors.
