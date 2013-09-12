@@ -63,7 +63,7 @@ func (v valueType) Type() string {
 }
 
 // Encode a value.
-func (v valueType) encode(w io.Writer, val interface{}) error {
+func (v valueType) encode(w io.Writer, val interface{}) {
 	switch v {
 	default:
 		writeString(w, fmt.Sprint(val))
@@ -72,7 +72,7 @@ func (v valueType) encode(w io.Writer, val interface{}) error {
 	case ValueFloat32, ValueFloat64:
 		writeString(w, fmt.Sprintf("%f", val))
 	}
-	return nil
+	panic("not reached")
 }
 
 // Represents a collection of errors.
@@ -145,7 +145,8 @@ func (m *Metric) EncodeValue(w io.Writer, val interface{}) error {
 	writeUint32(w, 133)
 	m.writeHead(w)
 	writeString(w, "%s")
-	return m.ValueType.encode(w, val)
+	m.ValueType.encode(w, val)
+	return nil
 }
 
 func (m *Metric) writeHead(w io.Writer) {
