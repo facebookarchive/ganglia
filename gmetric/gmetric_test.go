@@ -72,6 +72,14 @@ func (e errWriter) Write(b []byte) (int, error) {
 	return 0, errFixed
 }
 
+var panicFixed = "foo42"
+
+type panicWriter int
+
+func (e panicWriter) Write(b []byte) (int, error) {
+	panic(panicFixed)
+}
+
 type harness struct {
 	Client     *gmetric.Client
 	Port       int
@@ -364,6 +372,48 @@ func TestEncodeValueWriterError(t *testing.T) {
 		Lifetime:     24 * time.Hour,
 	}
 	if err := m.EncodeValue(errWriter(0), "val"); err != errFixed {
+		t.Fatalf("was expecting errFixed but got %s", err)
+	}
+}
+
+func TestEncodeMetaWriterPanic(t *testing.T) {
+	t.Parallel()
+	defer func() {
+		if r := recover(); r != panicFixed {
+			t.Fatal("was expecting panicFixed but got %s", r)
+		}
+	}()
+	m := &gmetric.Metric{
+		Name:         "encode_meta_panic_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueUint32,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	if err := m.EncodeMeta(panicWriter(0)); err != errFixed {
+		t.Fatalf("was expecting errFixed but got %s", err)
+	}
+}
+
+func TestEncodeValueWriterPanic(t *testing.T) {
+	t.Parallel()
+	defer func() {
+		if r := recover(); r != panicFixed {
+			t.Fatal("was expecting panicFixed but got %s", r)
+		}
+	}()
+	m := &gmetric.Metric{
+		Name:         "string_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueString,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	if err := m.EncodeValue(panicWriter(0), "val"); err != errFixed {
 		t.Fatalf("was expecting errFixed but got %s", err)
 	}
 }

@@ -147,8 +147,12 @@ type Metric struct {
 func (m *Metric) EncodeMeta(w io.Writer) (err error) {
 	pw := &panickyWriter{Writer: w}
 	defer func() {
-		if r := recover(); r == errPanickyWriter {
-			err = pw.Error
+		if r := recover(); r != nil {
+			if r == errPanickyWriter {
+				err = pw.Error
+			} else {
+				panic(r)
+			}
 		}
 	}()
 
@@ -183,8 +187,12 @@ func (m *Metric) EncodeMeta(w io.Writer) (err error) {
 func (m *Metric) EncodeValue(w io.Writer, val interface{}) (err error) {
 	pw := &panickyWriter{Writer: w}
 	defer func() {
-		if r := recover(); r == errPanickyWriter {
-			err = pw.Error
+		if r := recover(); r != nil {
+			if r == errPanickyWriter {
+				err = pw.Error
+			} else {
+				panic(r)
+			}
 		}
 	}()
 
