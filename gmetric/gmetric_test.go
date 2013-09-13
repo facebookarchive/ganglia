@@ -115,13 +115,13 @@ func (h *harness) Start() {
 		},
 	}
 
-	if err := h.Client.Start(); err != nil {
+	if err := h.Client.Open(); err != nil {
 		h.T.Fatal(err)
 	}
 }
 
 func (h *harness) Stop() {
-	if err := h.Client.Stop(); err != nil {
+	if err := h.Client.Close(); err != nil {
 		h.T.Fatal(err)
 	}
 
@@ -319,10 +319,10 @@ func TestExtras(t *testing.T) {
 func TestNoAddrs(t *testing.T) {
 	t.Parallel()
 	c := &gmetric.Client{}
-	if c.Start() == nil {
+	if c.Open() == nil {
 		t.Fatal("was expecting an error")
 	}
-	if c.Stop() == nil {
+	if c.Close() == nil {
 		t.Fatal("was expecting an error")
 	}
 }

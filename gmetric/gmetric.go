@@ -92,11 +92,12 @@ func (m MultiError) Error() string {
 	return buf.String()
 }
 
-// A Client represents a set of connections to write metrics to.
+// A Client represents a set of connections to write metrics to. The Client is
+// itself a Writer which writes the given bytes to all open connections.
 type Client struct {
-	Addr   []*net.UDPAddr
-	conn   []*net.UDPConn
-	writer io.Writer
+	io.Writer
+	Addr []*net.UDPAddr
+	conn []*net.UDPConn
 }
 
 // Defines a Metric.
@@ -201,7 +202,7 @@ func (c *Client) SendMeta(m *Metric) error {
 	if err := m.EncodeMeta(&buf); err != nil {
 		return err
 	}
-	if _, err := c.writer.Write(buf.Bytes()); err != nil {
+	if _, err := c.Write(buf.Bytes()); err != nil {
 		return err
 	}
 	return nil
@@ -213,15 +214,14 @@ func (c *Client) SendValue(m *Metric, val interface{}) error {
 	if err := m.EncodeValue(&buf, val); err != nil {
 		return err
 	}
-	if _, err := c.writer.Write(buf.Bytes()); err != nil {
+	if _, err := c.Write(buf.Bytes()); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Start the client and establish the connections. If an error is returned it
-// will be a MultiError.
-func (c *Client) Start() error {
+// Open the connections. If an error is returned it will be a MultiError.
+func (c *Client) Open() error {
 	if len(c.Addr) == 0 {
 		return errNoAddrs
 	}
@@ -237,7 +237,7 @@ func (c *Client) Start() error {
 		c.conn = append(c.conn, s)
 		writers = append(writers, s)
 	}
-	c.writer = io.MultiWriter(writers...)
+	c.Writer = io.MultiWriter(writers...)
 
 	if len(errs) == 0 {
 		return nil
@@ -245,9 +245,8 @@ func (c *Client) Start() error {
 	return errs
 }
 
-// Shutdown the client and close the connections. If an error is returned it
-// will be a MultiError.
-func (c *Client) Stop() error {
+// Close the connections. If an error is returned it will be a MultiError.
+func (c *Client) Close() error {
 	if len(c.Addr) == 0 {
 		return errNoAddrs
 	}
