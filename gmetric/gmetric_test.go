@@ -272,3 +272,50 @@ func TestFloatMetric(t *testing.T) {
 		Slope: "both",
 	})
 }
+
+func TestExtras(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name:         "simple_metric",
+		Spoof:        "127.0.0.1:localhost_spoof",
+		Title:        "the simple title",
+		Description:  "the simple description",
+		Host:         "localhost",
+		Group:        "simple_group",
+		ValueType:    gmetric.ValueString,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	const val = "hello"
+
+	if err := h.Client.SendMeta(m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := h.Client.SendValue(m, val); err != nil {
+		t.Fatal(err)
+	}
+
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Unit:  m.Units,
+		Value: val,
+		Tn:    1,
+		Tmax:  20,
+		Dmax:  86400,
+		Slope: "both",
+		ExtraData: gmon.ExtraData{
+			ExtraElements: []gmon.ExtraElement{
+				gmon.ExtraElement{Name: "GROUP", Val: m.Group},
+				gmon.ExtraElement{Name: "SPOOF_HOST", Val: m.Spoof},
+				gmon.ExtraElement{Name: "DESC", Val: m.Description},
+				gmon.ExtraElement{Name: "TITLE", Val: m.Title},
+			},
+		},
+	})
+}
