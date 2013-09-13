@@ -1,7 +1,6 @@
 package gmetric_test
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -12,7 +11,9 @@ import (
 	"time"
 
 	"github.com/daaku/go.freeport"
-	"github.com/daaku/go.gmetric"
+
+	"github.com/daaku/go.ganglia/gmetric"
+	"github.com/daaku/go.ganglia/gmon"
 )
 
 const localhostIP = "127.0.0.1"
@@ -131,30 +132,31 @@ func (h *harness) Stop() {
 	}
 }
 
-func (h *harness) Xml() []byte {
-	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", localhostIP, h.Port))
+func (h *harness) State() *gmon.Ganglia {
+	addr := fmt.Sprintf("%s:%d", localhostIP, h.Port)
+	ganglia, err := gmon.RemoteRead("tcp", addr)
 	if err != nil {
 		h.T.Fatal(err)
 	}
-	defer conn.Close()
-
-	b, err := ioutil.ReadAll(conn)
-	if err != nil {
-		h.T.Fatal(err)
-	}
-
-	return b
+	return ganglia
 }
 
-func (h *harness) XmlContains(s []byte) {
+func (h *harness) ContainsMetric(m *gmon.Metric) {
 	deadline := time.Now().Add(2 * time.Second)
 	for {
-		xml := h.Xml()
-		if bytes.Contains(xml, s) {
-			return
+		g := h.State()
+		for _, cluster := range g.Clusters {
+			for _, host := range cluster.Hosts {
+				for _, metric := range host.Metrics {
+					if metric.Name == m.Name {
+						return
+					}
+				}
+			}
 		}
+
 		if time.Now().After(deadline) {
-			h.T.Fatalf("did not find %s in xml\n%s", s, xml)
+			h.T.Fatalf("did not find metric %v in\n%v", m, g)
 		}
 	}
 }
@@ -178,14 +180,22 @@ func TestSimpleMetric(t *testing.T) {
 		TickInterval: 20 * time.Second,
 		Lifetime:     24 * time.Hour,
 	}
+	const val = 10
 
 	if err := h.Client.SendMeta(m); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := h.Client.SendValue(m, 10); err != nil {
+	if err := h.Client.SendValue(m, val); err != nil {
 		t.Fatal(err)
 	}
 
-	h.XmlContains([]byte(`<METRIC NAME="simple_metric" VAL="10" TYPE="uint32" UNITS="count" TN="1" TMAX="20" DMAX="86400" SLOPE="both">`))
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Value: val,
+		Unit:  m.Units,
+		Tmax:  20,
+		Dmax:  86400,
+		Slope: "both",
+	})
 }
