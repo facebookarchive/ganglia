@@ -417,3 +417,19 @@ func TestWriteValueWriterPanic(t *testing.T) {
 		t.Fatalf("was expecting errFixed but got %s", err)
 	}
 }
+
+func TestNotOpen(t *testing.T) {
+	t.Parallel()
+	c := &gmetric.Client{}
+	m := &gmetric.Metric{
+		Name:      "string_metric",
+		Host:      "localhost",
+		ValueType: gmetric.ValueString,
+	}
+	if err := c.WriteMeta(m); err == nil {
+		t.Fatalf("was expecting an error")
+	}
+	if err := c.WriteValue(m, "val"); err == nil {
+		t.Fatalf("was expecting an error")
+	}
+}
