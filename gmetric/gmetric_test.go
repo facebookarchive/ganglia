@@ -28,6 +28,7 @@ globals {
   mute = no
   deaf = no
   allow_extra_data = yes
+  host_dmax = 864000
 }
 
 cluster {
