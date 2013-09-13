@@ -315,3 +315,14 @@ func TestExtras(t *testing.T) {
 		},
 	})
 }
+
+func TestNoAddrs(t *testing.T) {
+	t.Parallel()
+	c := &gmetric.Client{}
+	if c.Start() == nil {
+		t.Fatal("was expecting an error")
+	}
+	if c.Stop() == nil {
+		t.Fatal("was expecting an error")
+	}
+}

@@ -3,13 +3,17 @@ package gmetric
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net"
 	"time"
 )
 
-var zeroByte = []byte{byte(0)}
+var (
+	zeroByte   = []byte{byte(0)}
+	errNoAddrs = errors.New("gmetric: no addrs provided")
+)
 
 type slopeType uint32
 
@@ -190,6 +194,10 @@ func (c *Client) SendValue(m *Metric, val interface{}) error {
 // Start the client and establish the connections. If an error is returned it
 // will be a MultiError.
 func (c *Client) Start() error {
+	if len(c.Addr) == 0 {
+		return errNoAddrs
+	}
+
 	var errs MultiError
 	var writers []io.Writer
 	for _, addr := range c.Addr {
@@ -212,6 +220,10 @@ func (c *Client) Start() error {
 // Shutdown the client and close the connections. If an error is returned it
 // will be a MultiError.
 func (c *Client) Stop() error {
+	if len(c.Addr) == 0 {
+		return errNoAddrs
+	}
+
 	var errs MultiError
 	for _, conn := range c.conn {
 		if err := conn.Close(); err != nil {
