@@ -144,7 +144,7 @@ func (h *harness) State() *gmon.Ganglia {
 }
 
 func (h *harness) ContainsMetric(m *gmon.Metric) {
-	deadline := time.Now().Add(2 * time.Second)
+	deadline := time.Now().Add(5 * time.Second)
 	for {
 		g := h.State()
 		for _, cluster := range g.Clusters {
@@ -175,7 +175,7 @@ func TestUint32Metric(t *testing.T) {
 	defer h.Stop()
 
 	m := &gmetric.Metric{
-		Name:         "simple_metric",
+		Name:         "uint32_metric",
 		Host:         "localhost",
 		ValueType:    gmetric.ValueUint32,
 		Units:        "count",
@@ -209,7 +209,7 @@ func TestStringMetric(t *testing.T) {
 	defer h.Stop()
 
 	m := &gmetric.Metric{
-		Name:         "simple_metric",
+		Name:         "string_metric",
 		Host:         "localhost",
 		ValueType:    gmetric.ValueString,
 		Units:        "count",
@@ -243,7 +243,7 @@ func TestFloatMetric(t *testing.T) {
 	defer h.Stop()
 
 	m := &gmetric.Metric{
-		Name:         "simple_metric",
+		Name:         "float_metric",
 		Host:         "localhost",
 		ValueType:    gmetric.ValueFloat32,
 		Units:        "count",
@@ -276,7 +276,7 @@ func TestExtras(t *testing.T) {
 	defer h.Stop()
 
 	m := &gmetric.Metric{
-		Name:         "simple_metric",
+		Name:         "extras_metric",
 		Spoof:        "127.0.0.1:localhost_spoof",
 		Title:        "the simple title",
 		Description:  "the simple description",
