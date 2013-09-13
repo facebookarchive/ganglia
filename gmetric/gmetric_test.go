@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/daaku/go.freeport"
+	"github.com/daaku/go.subset"
 
 	"github.com/daaku/go.ganglia/gmetric"
 	"github.com/daaku/go.ganglia/gmon"
@@ -148,7 +149,7 @@ func (h *harness) ContainsMetric(m *gmon.Metric) {
 		for _, cluster := range g.Clusters {
 			for _, host := range cluster.Hosts {
 				for _, metric := range host.Metrics {
-					if metric.Name == m.Name {
+					if subset.Check(m, &metric) {
 						return
 					}
 				}
@@ -156,7 +157,7 @@ func (h *harness) ContainsMetric(m *gmon.Metric) {
 		}
 
 		if time.Now().After(deadline) {
-			h.T.Fatalf("did not find metric %v in\n%v", m, g)
+			h.T.Fatalf("did not find metric %+v in\n%+v", m, g)
 		}
 	}
 }
@@ -194,6 +195,7 @@ func TestSimpleMetric(t *testing.T) {
 		Name:  m.Name,
 		Value: val,
 		Unit:  m.Units,
+		Tn:    1,
 		Tmax:  20,
 		Dmax:  86400,
 		Slope: "both",
