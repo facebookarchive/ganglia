@@ -35,7 +35,8 @@ func Example() {
 		Lifetime:     24 * time.Hour,
 	}
 
-	// Meta packets don't need to be sent regularly.
+	// Meta packets don't need to be sent regularly. Typically send them on
+	// application startup.
 	if err := client.WriteMeta(metric); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -46,7 +47,7 @@ func Example() {
 		os.Exit(1)
 	}
 
-	// Close the connections before termination your application.
+	// Close the connections before terminating your application.
 	if err := client.Close(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
