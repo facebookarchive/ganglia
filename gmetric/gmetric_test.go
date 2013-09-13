@@ -199,7 +199,6 @@ func TestUint32Metric(t *testing.T) {
 		Unit:  m.Units,
 		Tn:    1,
 		Tmax:  20,
-		Dmax:  86400,
 		Slope: "both",
 	})
 }
@@ -234,7 +233,6 @@ func TestStringMetric(t *testing.T) {
 		Value: val,
 		Tn:    1,
 		Tmax:  20,
-		Dmax:  86400,
 		Slope: "both",
 	})
 }
@@ -268,7 +266,6 @@ func TestFloatMetric(t *testing.T) {
 		Value: "3.140000",
 		Tn:    1,
 		Tmax:  20,
-		Dmax:  86400,
 		Slope: "both",
 	})
 }
@@ -307,7 +304,6 @@ func TestExtras(t *testing.T) {
 		Value: val,
 		Tn:    1,
 		Tmax:  20,
-		Dmax:  86400,
 		Slope: "both",
 		ExtraData: gmon.ExtraData{
 			ExtraElements: []gmon.ExtraElement{
