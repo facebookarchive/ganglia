@@ -101,17 +101,45 @@ type Client struct {
 
 // Defines a Metric.
 type Metric struct {
-	Name         string
-	Title        string
-	Description  string
-	Group        string
-	Units        string
-	Host         string
-	Spoof        string
-	ValueType    valueType
-	Slope        slopeType
-	TickInterval time.Duration // Also known as TMax.
-	Lifetime     time.Duration // Also known as DMax.
+	// The name is used as the file name, and also the title unless one is
+	// explicitly provided.
+	Name string
+
+	// The title is for human consumption and is shown atop the graph.
+	Title string
+
+	// Descriptions serve as documentation.
+	Description string
+
+	// The group ensures your metric is kept alongside sibling metrics.
+	Group string
+
+	// The units are shown in the graph to provide context to the numbers.
+	Units string
+
+	// The actual hostname for the machine.
+	Host string
+
+	// Optional spoof name for the machine. Since the default is reverse DNS this
+	// allows for overriding the hostname to make it useful.
+	Spoof string
+
+	// Defines the value type for this metric. This also controls how a given
+	// value is encoded. You must specify one of the predefined constants.
+	ValueType valueType
+
+	// Defines the slope type. You must specify one of the predefined constants.
+	Slope slopeType
+
+	// Also known as TMax, it defines the max time interval between which the
+	// daemon will expect updates. This should map to how often you publish the
+	// metric.
+	TickInterval time.Duration
+
+	// Also known as DMax, it defines the lifetime for the metric. That is, once
+	// the last received metric is older than the defined value it will become
+	// eligible for garbage collection.
+	Lifetime time.Duration
 }
 
 // Writes a metadata packet for the Metric.
