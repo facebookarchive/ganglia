@@ -169,7 +169,9 @@ func (c *Client) SendMeta(m *Metric) error {
 	if err := m.EncodeMeta(&buf); err != nil {
 		return err
 	}
-	c.writer.Write(buf.Bytes())
+	if _, err := c.writer.Write(buf.Bytes()); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -179,7 +181,9 @@ func (c *Client) SendValue(m *Metric, val interface{}) error {
 	if err := m.EncodeValue(&buf, val); err != nil {
 		return err
 	}
-	c.writer.Write(buf.Bytes())
+	if _, err := c.writer.Write(buf.Bytes()); err != nil {
+		return err
+	}
 	return nil
 }
 
