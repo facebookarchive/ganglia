@@ -154,20 +154,20 @@ func (m *Metric) EncodeMeta(w io.Writer) error {
 	writeUint32(w, uint32(m.TickInterval.Seconds()))
 	writeUint32(w, uint32(m.Lifetime.Seconds()))
 
-	var pairs [][2]string
+	var extras [][2]string
 	if m.Title != "" {
-		pairs = append(pairs, [2]string{"TITLE", m.Title})
+		extras = append(extras, [2]string{"TITLE", m.Title})
 	}
 	if m.Description != "" {
-		pairs = append(pairs, [2]string{"DESC", m.Description})
+		extras = append(extras, [2]string{"DESC", m.Description})
 	}
 	if m.Spoof != "" {
-		pairs = append(pairs, [2]string{"SPOOF_HOST", m.Spoof})
+		extras = append(extras, [2]string{"SPOOF_HOST", m.Spoof})
 	}
 	if m.Group != "" {
-		pairs = append(pairs, [2]string{"GROUP", m.Group})
+		extras = append(extras, [2]string{"GROUP", m.Group})
 	}
-	writePairs(w, pairs)
+	writeExtras(w, extras)
 	return nil
 }
 
@@ -285,9 +285,9 @@ func writeString(w io.Writer, val string) {
 	}
 }
 
-func writePairs(w io.Writer, pairs [][2]string) {
-	writeUint32(w, uint32(len(pairs)))
-	for _, p := range pairs {
+func writeExtras(w io.Writer, extras [][2]string) {
+	writeUint32(w, uint32(len(extras)))
+	for _, p := range extras {
 		writeString(w, p[0])
 		writeString(w, p[1])
 	}
