@@ -202,11 +202,11 @@ func TestUint32Metric(t *testing.T) {
 	}
 	const val = 10
 
-	if err := h.Client.SendMeta(m); err != nil {
+	if err := h.Client.WriteMeta(m); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := h.Client.SendValue(m, val); err != nil {
+	if err := h.Client.WriteValue(m, val); err != nil {
 		t.Fatal(err)
 	}
 
@@ -236,11 +236,11 @@ func TestStringMetric(t *testing.T) {
 	}
 	const val = "hello"
 
-	if err := h.Client.SendMeta(m); err != nil {
+	if err := h.Client.WriteMeta(m); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := h.Client.SendValue(m, val); err != nil {
+	if err := h.Client.WriteValue(m, val); err != nil {
 		t.Fatal(err)
 	}
 
@@ -269,11 +269,11 @@ func TestFloatMetric(t *testing.T) {
 		Lifetime:     24 * time.Hour,
 	}
 
-	if err := h.Client.SendMeta(m); err != nil {
+	if err := h.Client.WriteMeta(m); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := h.Client.SendValue(m, 3.14); err != nil {
+	if err := h.Client.WriteValue(m, 3.14); err != nil {
 		t.Fatal(err)
 	}
 
@@ -307,11 +307,11 @@ func TestExtras(t *testing.T) {
 	}
 	const val = "hello"
 
-	if err := h.Client.SendMeta(m); err != nil {
+	if err := h.Client.WriteMeta(m); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := h.Client.SendValue(m, val); err != nil {
+	if err := h.Client.WriteValue(m, val); err != nil {
 		t.Fatal(err)
 	}
 
@@ -344,10 +344,10 @@ func TestNoAddrs(t *testing.T) {
 	}
 }
 
-func TestEncodeMetaWriterError(t *testing.T) {
+func TestWriteMetaWriterError(t *testing.T) {
 	t.Parallel()
 	m := &gmetric.Metric{
-		Name:         "encode_meta_panic_metric",
+		Name:         "write_meta_panic_metric",
 		Host:         "localhost",
 		ValueType:    gmetric.ValueUint32,
 		Units:        "count",
@@ -355,12 +355,12 @@ func TestEncodeMetaWriterError(t *testing.T) {
 		TickInterval: 20 * time.Second,
 		Lifetime:     24 * time.Hour,
 	}
-	if err := m.EncodeMeta(errWriter(0)); err != errFixed {
+	if err := m.WriteMeta(errWriter(0)); err != errFixed {
 		t.Fatalf("was expecting errFixed but got %s", err)
 	}
 }
 
-func TestEncodeValueWriterError(t *testing.T) {
+func TestWriteValueWriterError(t *testing.T) {
 	t.Parallel()
 	m := &gmetric.Metric{
 		Name:         "string_metric",
@@ -371,12 +371,12 @@ func TestEncodeValueWriterError(t *testing.T) {
 		TickInterval: 20 * time.Second,
 		Lifetime:     24 * time.Hour,
 	}
-	if err := m.EncodeValue(errWriter(0), "val"); err != errFixed {
+	if err := m.WriteValue(errWriter(0), "val"); err != errFixed {
 		t.Fatalf("was expecting errFixed but got %s", err)
 	}
 }
 
-func TestEncodeMetaWriterPanic(t *testing.T) {
+func TestWriteMetaWriterPanic(t *testing.T) {
 	t.Parallel()
 	defer func() {
 		if r := recover(); r != panicFixed {
@@ -384,7 +384,7 @@ func TestEncodeMetaWriterPanic(t *testing.T) {
 		}
 	}()
 	m := &gmetric.Metric{
-		Name:         "encode_meta_panic_metric",
+		Name:         "write_meta_panic_metric",
 		Host:         "localhost",
 		ValueType:    gmetric.ValueUint32,
 		Units:        "count",
@@ -392,12 +392,12 @@ func TestEncodeMetaWriterPanic(t *testing.T) {
 		TickInterval: 20 * time.Second,
 		Lifetime:     24 * time.Hour,
 	}
-	if err := m.EncodeMeta(panicWriter(0)); err != errFixed {
+	if err := m.WriteMeta(panicWriter(0)); err != errFixed {
 		t.Fatalf("was expecting errFixed but got %s", err)
 	}
 }
 
-func TestEncodeValueWriterPanic(t *testing.T) {
+func TestWriteValueWriterPanic(t *testing.T) {
 	t.Parallel()
 	defer func() {
 		if r := recover(); r != panicFixed {
@@ -413,7 +413,7 @@ func TestEncodeValueWriterPanic(t *testing.T) {
 		TickInterval: 20 * time.Second,
 		Lifetime:     24 * time.Hour,
 	}
-	if err := m.EncodeValue(panicWriter(0), "val"); err != errFixed {
+	if err := m.WriteValue(panicWriter(0), "val"); err != errFixed {
 		t.Fatalf("was expecting errFixed but got %s", err)
 	}
 }

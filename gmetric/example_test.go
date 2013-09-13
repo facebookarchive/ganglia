@@ -36,12 +36,12 @@ func Example() {
 	}
 
 	// Meta packets don't need to be sent regularly.
-	if err := client.SendMeta(metric); err != nil {
+	if err := client.WriteMeta(metric); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	if err := client.SendValue(metric, 1); err != nil {
+	if err := client.WriteValue(metric, 1); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}

@@ -66,8 +66,8 @@ func (v valueType) Type() string {
 	return "unknown"
 }
 
-// Encode a value.
-func (v valueType) encode(w io.Writer, val interface{}) {
+// Write a value.
+func (v valueType) write(w io.Writer, val interface{}) {
 	switch v {
 	default:
 		writeString(w, fmt.Sprint(val))
@@ -144,7 +144,7 @@ type Metric struct {
 }
 
 // Writes a metadata packet for the Metric.
-func (m *Metric) EncodeMeta(w io.Writer) (err error) {
+func (m *Metric) WriteMeta(w io.Writer) (err error) {
 	pw := &panickyWriter{Writer: w}
 	defer func() {
 		if r := recover(); r != nil {
@@ -184,7 +184,7 @@ func (m *Metric) EncodeMeta(w io.Writer) (err error) {
 
 // Writes a value packet for the given value. The value will be encoded based
 // on the configured ValueType.
-func (m *Metric) EncodeValue(w io.Writer, val interface{}) (err error) {
+func (m *Metric) WriteValue(w io.Writer, val interface{}) (err error) {
 	pw := &panickyWriter{Writer: w}
 	defer func() {
 		if r := recover(); r != nil {
@@ -199,7 +199,7 @@ func (m *Metric) EncodeValue(w io.Writer, val interface{}) (err error) {
 	writeUint32(pw, 133)
 	m.writeHead(pw)
 	writeString(pw, "%s")
-	m.ValueType.encode(pw, val)
+	m.ValueType.write(pw, val)
 	return
 }
 
@@ -218,10 +218,10 @@ func (m *Metric) writeHead(w io.Writer) {
 	}
 }
 
-// Send the Metric metadata.
-func (c *Client) SendMeta(m *Metric) error {
+// Write the Metric metadata.
+func (c *Client) WriteMeta(m *Metric) error {
 	var buf bytes.Buffer
-	if err := m.EncodeMeta(&buf); err != nil {
+	if err := m.WriteMeta(&buf); err != nil {
 		return err
 	}
 	if _, err := c.Write(buf.Bytes()); err != nil {
@@ -230,10 +230,10 @@ func (c *Client) SendMeta(m *Metric) error {
 	return nil
 }
 
-// Send a value for the Metric.
-func (c *Client) SendValue(m *Metric, val interface{}) error {
+// Write a value for the Metric.
+func (c *Client) WriteValue(m *Metric, val interface{}) error {
 	var buf bytes.Buffer
-	if err := m.EncodeValue(&buf, val); err != nil {
+	if err := m.WriteValue(&buf, val); err != nil {
 		return err
 	}
 	if _, err := c.Write(buf.Bytes()); err != nil {
