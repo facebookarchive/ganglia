@@ -22,7 +22,7 @@ type ExtraData struct {
 
 type Metric struct {
 	Name      string    `xml:"NAME,attr"`
-	Value     float64   `xml:"VAL,attr"`
+	Value     string    `xml:"VAL,attr"`
 	Unit      string    `xml:"UNITS,attr"`
 	Slope     string    `xml:"SLOPE,attr"`
 	Tn        int       `xml:"TN,attr"`

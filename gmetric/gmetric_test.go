@@ -168,7 +168,8 @@ func newHarness(t *testing.T) *harness {
 	return h
 }
 
-func TestSimpleMetric(t *testing.T) {
+func TestUint32Metric(t *testing.T) {
+	t.Parallel()
 	h := newHarness(t)
 	defer h.Stop()
 
@@ -193,8 +194,77 @@ func TestSimpleMetric(t *testing.T) {
 
 	h.ContainsMetric(&gmon.Metric{
 		Name:  m.Name,
-		Value: val,
+		Value: fmt.Sprint(val),
 		Unit:  m.Units,
+		Tn:    1,
+		Tmax:  20,
+		Dmax:  86400,
+		Slope: "both",
+	})
+}
+
+func TestStringMetric(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name:         "simple_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueString,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	const val = "hello"
+
+	if err := h.Client.SendMeta(m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := h.Client.SendValue(m, val); err != nil {
+		t.Fatal(err)
+	}
+
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Unit:  m.Units,
+		Value: val,
+		Tn:    1,
+		Tmax:  20,
+		Dmax:  86400,
+		Slope: "both",
+	})
+}
+
+func TestFloatMetric(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name:         "simple_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueFloat32,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+
+	if err := h.Client.SendMeta(m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := h.Client.SendValue(m, 3.14); err != nil {
+		t.Fatal(err)
+	}
+
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Unit:  m.Units,
+		Value: "3.140000",
 		Tn:    1,
 		Tmax:  20,
 		Dmax:  86400,
