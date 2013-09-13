@@ -96,8 +96,8 @@ func (m MultiError) Error() string {
 // itself a Writer which writes the given bytes to all open connections.
 type Client struct {
 	io.Writer
-	Addr []*net.UDPAddr
-	conn []*net.UDPConn
+	Addr []net.Addr
+	conn []net.Conn
 }
 
 // Defines a Metric.
@@ -251,7 +251,7 @@ func (c *Client) Open() error {
 	var errs MultiError
 	var writers []io.Writer
 	for _, addr := range c.Addr {
-		s, err := net.DialUDP("udp", nil, addr)
+		s, err := net.Dial(addr.Network(), addr.String())
 		if err != nil {
 			errs = append(errs, err)
 			continue

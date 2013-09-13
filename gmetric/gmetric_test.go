@@ -127,7 +127,7 @@ func (h *harness) Start() {
 	}
 
 	h.Client = &gmetric.Client{
-		Addr: []*net.UDPAddr{
+		Addr: []net.Addr{
 			&net.UDPAddr{IP: net.ParseIP(localhostIP), Port: h.Port},
 		},
 	}
