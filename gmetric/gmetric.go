@@ -144,15 +144,22 @@ type Metric struct {
 }
 
 // Writes a metadata packet for the Metric.
-func (m *Metric) EncodeMeta(w io.Writer) error {
-	writeUint32(w, 128)
-	m.writeHead(w)
-	writeString(w, m.ValueType.Type())
-	writeString(w, m.Name)
-	writeString(w, m.Units)
-	writeUint32(w, uint32(m.Slope))
-	writeUint32(w, uint32(m.TickInterval.Seconds()))
-	writeUint32(w, uint32(m.Lifetime.Seconds()))
+func (m *Metric) EncodeMeta(w io.Writer) (err error) {
+	pw := &panickyWriter{Writer: w}
+	defer func() {
+		if r := recover(); r == errPanickyWriter {
+			err = pw.Error
+		}
+	}()
+
+	writeUint32(pw, 128)
+	m.writeHead(pw)
+	writeString(pw, m.ValueType.Type())
+	writeString(pw, m.Name)
+	writeString(pw, m.Units)
+	writeUint32(pw, uint32(m.Slope))
+	writeUint32(pw, uint32(m.TickInterval.Seconds()))
+	writeUint32(pw, uint32(m.Lifetime.Seconds()))
 
 	var extras [][2]string
 	if m.Title != "" {
@@ -167,18 +174,25 @@ func (m *Metric) EncodeMeta(w io.Writer) error {
 	if m.Group != "" {
 		extras = append(extras, [2]string{"GROUP", m.Group})
 	}
-	writeExtras(w, extras)
-	return nil
+	writeExtras(pw, extras)
+	return
 }
 
 // Writes a value packet for the given value. The value will be encoded based
 // on the configured ValueType.
-func (m *Metric) EncodeValue(w io.Writer, val interface{}) error {
-	writeUint32(w, 133)
-	m.writeHead(w)
-	writeString(w, "%s")
-	m.ValueType.encode(w, val)
-	return nil
+func (m *Metric) EncodeValue(w io.Writer, val interface{}) (err error) {
+	pw := &panickyWriter{Writer: w}
+	defer func() {
+		if r := recover(); r == errPanickyWriter {
+			err = pw.Error
+		}
+	}()
+
+	writeUint32(pw, 133)
+	m.writeHead(pw)
+	writeString(pw, "%s")
+	m.ValueType.encode(pw, val)
+	return
 }
 
 func (m *Metric) writeHead(w io.Writer) {
@@ -291,4 +305,26 @@ func writeExtras(w io.Writer, extras [][2]string) {
 		writeString(w, p[0])
 		writeString(w, p[1])
 	}
+}
+
+var errPanickyWriter = errors.New("panicky-writer sentinel")
+
+// Panicky Writer provides a io.Writer that panics whenever the underlying
+// writer returns an error. This allows for localized panic/recover for less
+// verbose error handling internally. DO NOT expose this without a
+// corresponding recover().
+type panickyWriter struct {
+	io.Writer
+	Count int
+	Error error
+}
+
+func (p *panickyWriter) Write(b []byte) (int, error) {
+	n, err := p.Writer.Write(b)
+	p.Count += n
+	if err != nil {
+		p.Error = err
+		panic(errPanickyWriter)
+	}
+	return n, nil
 }

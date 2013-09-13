@@ -1,6 +1,7 @@
 package gmetric_test
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -61,6 +62,14 @@ func init() {
 	if configTemplateErr != nil {
 		panic(configTemplateErr)
 	}
+}
+
+var errFixed = errors.New("fixed error")
+
+type errWriter int
+
+func (e errWriter) Write(b []byte) (int, error) {
+	return 0, errFixed
 }
 
 type harness struct {
@@ -324,5 +333,37 @@ func TestNoAddrs(t *testing.T) {
 	}
 	if c.Close() == nil {
 		t.Fatal("was expecting an error")
+	}
+}
+
+func TestEncodeMetaWriterError(t *testing.T) {
+	t.Parallel()
+	m := &gmetric.Metric{
+		Name:         "encode_meta_panic_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueUint32,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	if err := m.EncodeMeta(errWriter(0)); err != errFixed {
+		t.Fatalf("was expecting errFixed but got %s", err)
+	}
+}
+
+func TestEncodeValueWriterError(t *testing.T) {
+	t.Parallel()
+	m := &gmetric.Metric{
+		Name:         "string_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueString,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	if err := m.EncodeValue(errWriter(0), "val"); err != errFixed {
+		t.Fatalf("was expecting errFixed but got %s", err)
 	}
 }
