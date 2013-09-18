@@ -302,19 +302,20 @@ func TestFloatMetric(t *testing.T) {
 		TickInterval: 20 * time.Second,
 		Lifetime:     24 * time.Hour,
 	}
+	const val = 3.14
 
 	if err := h.Client.WriteMeta(m); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := h.Client.WriteValue(m, 3.14); err != nil {
+	if err := h.Client.WriteValue(m, val); err != nil {
 		t.Fatal(err)
 	}
 
 	h.ContainsMetric(&gmon.Metric{
 		Name:  m.Name,
 		Unit:  m.Units,
-		Value: "3.140000",
+		Value: fmt.Sprint(val),
 		Tn:    1,
 		Tmax:  20,
 		Slope: "both",

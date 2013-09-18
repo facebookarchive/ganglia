@@ -56,18 +56,6 @@ const (
 	ValueFloat64 = valueType("double")
 )
 
-// Write a value.
-func (v valueType) write(w io.Writer, val interface{}) {
-	switch v {
-	default:
-		writeString(w, fmt.Sprint(val))
-	case ValueUint8, ValueInt8, ValueUint16, ValueInt16, ValueUint32, ValueInt32:
-		writeString(w, fmt.Sprintf("%d", val))
-	case ValueFloat32, ValueFloat64:
-		writeString(w, fmt.Sprintf("%f", val))
-	}
-}
-
 // Represents a collection of errors.
 type MultiError []error
 
@@ -189,7 +177,7 @@ func (m *Metric) WriteValue(w io.Writer, val interface{}) (err error) {
 	writeUint32(pw, 133)
 	m.writeHead(pw)
 	writeString(pw, "%s")
-	m.ValueType.write(pw, val)
+	writeString(pw, fmt.Sprint(val))
 	return
 }
 
