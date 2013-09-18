@@ -34,6 +34,12 @@ func main() {
 	flag.StringVar(&metric.Spoof, "spoof", "", "IP address and name of host/device (colon separated) we are spoofing")
 	flag.Parse()
 
+	if metric.Name == "" || metric.ValueType == "" || *value == "" {
+		fmt.Fprintln(os.Stderr, "name, type and value are required")
+		flag.Usage()
+		os.Exit(2)
+	}
+
 	naddr, err := net.ResolveUDPAddr("udp", *addr)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
