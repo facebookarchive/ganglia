@@ -16,56 +16,45 @@ var (
 	errNotOpen = errors.New("gmetric: client not opened")
 )
 
-type slopeType uint32
+type slopeType string
 
 // The slope types supported by Ganglia.
 const (
-	SlopeZero slopeType = iota
-	SlopePositive
-	SlopeNegative
-	SlopeBoth
-	SlopeUnspecified
+	SlopeUnspecified = slopeType("")
+	SlopeZero        = slopeType("zero")
+	SlopePositive    = slopeType("positive")
+	SlopeNegative    = slopeType("negative")
+	SlopeBoth        = slopeType("both")
 )
 
-type valueType uint
+func (s slopeType) value() uint32 {
+	switch s {
+	case SlopeZero:
+		return 0
+	case SlopePositive:
+		return 1
+	case SlopeNegative:
+		return 2
+	case SlopeBoth:
+		return 3
+	}
+	return 4
+}
+
+type valueType string
 
 // The value types supported by Ganglia.
 const (
-	ValueString valueType = iota + 1
-	ValueUint8
-	ValueInt8
-	ValueUint16
-	ValueInt16
-	ValueUint32
-	ValueInt32
-	ValueFloat32
-	ValueFloat64
+	ValueString  = valueType("string")
+	ValueUint8   = valueType("uint8")
+	ValueInt8    = valueType("int8")
+	ValueUint16  = valueType("uint16")
+	ValueInt16   = valueType("int16")
+	ValueUint32  = valueType("uint32")
+	ValueInt32   = valueType("int32")
+	ValueFloat32 = valueType("float")
+	ValueFloat64 = valueType("double")
 )
-
-// Type string per configured type.
-func (v valueType) Type() string {
-	switch v {
-	case ValueString:
-		return "string"
-	case ValueUint8:
-		return "uint8"
-	case ValueInt8:
-		return "int8"
-	case ValueUint16:
-		return "uint16"
-	case ValueInt16:
-		return "int16"
-	case ValueUint32:
-		return "uint32"
-	case ValueInt32:
-		return "int32"
-	case ValueFloat32:
-		return "float"
-	case ValueFloat64:
-		return "double"
-	}
-	return "unknown"
-}
 
 // Write a value.
 func (v valueType) write(w io.Writer, val interface{}) {
@@ -159,10 +148,10 @@ func (m *Metric) WriteMeta(w io.Writer) (err error) {
 
 	writeUint32(pw, 128)
 	m.writeHead(pw)
-	writeString(pw, m.ValueType.Type())
+	writeString(pw, string(m.ValueType))
 	writeString(pw, m.Name)
 	writeString(pw, m.Units)
-	writeUint32(pw, uint32(m.Slope))
+	writeUint32(pw, m.Slope.value())
 	writeUint32(pw, uint32(m.TickInterval.Seconds()))
 	writeUint32(pw, uint32(m.Lifetime.Seconds()))
 
