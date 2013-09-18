@@ -186,6 +186,40 @@ func newHarness(t *testing.T) *harness {
 	return h
 }
 
+func TestUint8Metric(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name:         "uint8_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueUint8,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	const val = 10
+
+	if err := h.Client.WriteMeta(m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := h.Client.WriteValue(m, val); err != nil {
+		t.Fatal(err)
+	}
+
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Value: fmt.Sprint(val),
+		Unit:  m.Units,
+		Tn:    1,
+		Tmax:  20,
+		Slope: "both",
+	})
+}
+
 func TestUint32Metric(t *testing.T) {
 	t.Parallel()
 	h := newHarness(t)
