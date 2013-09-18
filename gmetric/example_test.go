@@ -35,8 +35,8 @@ func Example() {
 		Lifetime:     24 * time.Hour,
 	}
 
-	// Meta packets don't need to be sent regularly. Typically send them on
-	// application startup.
+	// Meta packets only need to be sent every `send_metadata_interval` as
+	// configured in gmond.conf.
 	if err := client.WriteMeta(metric); err != nil {
 		fmt.Println(err)
 		os.Exit(1)
