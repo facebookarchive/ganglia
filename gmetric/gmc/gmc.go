@@ -1,0 +1,63 @@
+// Package gmc is a light weight clone of the gmetric CLI. It only provides a
+// subset of the functionality provided by the official cli.
+package main
+
+import (
+	"flag"
+	"fmt"
+	"net"
+	"os"
+	"time"
+
+	"github.com/daaku/go.ganglia/gmetric"
+)
+
+func hostname() string {
+	h, _ := os.Hostname()
+	return h
+}
+
+func main() {
+	addr := flag.String("addr", "127.0.0.1:8649", "target udp address")
+	value := flag.String("value", "", "Value of the metric")
+	metric := &gmetric.Metric{}
+	flag.StringVar(&metric.Name, "name", "", "Name of the metric")
+	flag.StringVar(&metric.Title, "title", "", "Title of the metric")
+	flag.StringVar(&metric.Host, "host", hostname(), "Hostname")
+	flag.StringVar((*string)(&metric.ValueType), "type", "", "Either string|int8|uint8|int16|uint16|int32|uint32|float|double")
+	flag.StringVar(&metric.Units, "units", "", "Unit of measure for the value e.g. Kilobytes, Celcius")
+	flag.StringVar((*string)(&metric.Slope), "slope", "both", "Either zero|positive|negative|both")
+	flag.DurationVar(&metric.TickInterval, "tmax", 60*time.Second, "The maximum time between gmetric calls")
+	flag.DurationVar(&metric.Lifetime, "dmax", 0, "The lifetime in seconds of this metric")
+	flag.StringVar(&metric.Group, "group", "", "Group(s) of the metric (comma-separated)")
+	flag.StringVar(&metric.Description, "desc", "", "Description of the metric")
+	flag.StringVar(&metric.Spoof, "spoof", "", "IP address and name of host/device (colon separated) we are spoofing")
+	flag.Parse()
+
+	naddr, err := net.ResolveUDPAddr("udp", *addr)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+
+	client := &gmetric.Client{Addr: []net.Addr{naddr}}
+	if err := client.Open(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+
+	if err := client.WriteMeta(metric); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+
+	if err := client.WriteValue(metric, *value); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+
+	if err := client.Close(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+}
