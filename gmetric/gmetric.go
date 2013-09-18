@@ -103,8 +103,7 @@ type Metric struct {
 	// allows for overriding the hostname to make it useful.
 	Spoof string
 
-	// Defines the value type for this metric. This also controls how a given
-	// value is encoded. You must specify one of the predefined constants.
+	// Defines the value type. You must specify one of the predefined constants.
 	ValueType valueType
 
 	// Defines the slope type. You must specify one of the predefined constants.
