@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/daaku/go.ganglia/gmetric"
@@ -20,6 +21,7 @@ func hostname() string {
 func main() {
 	addr := flag.String("addr", "127.0.0.1:8649", "target udp address")
 	value := flag.String("value", "", "Value of the metric")
+	groups := flag.String("group", "", "Group(s) of the metric (comma-separated)")
 	metric := &gmetric.Metric{}
 	flag.StringVar(&metric.Name, "name", "", "Name of the metric")
 	flag.StringVar(&metric.Title, "title", "", "Title of the metric")
@@ -29,7 +31,6 @@ func main() {
 	flag.StringVar((*string)(&metric.Slope), "slope", "both", "Either zero|positive|negative|both")
 	flag.DurationVar(&metric.TickInterval, "tmax", 60*time.Second, "The maximum time between gmetric calls")
 	flag.DurationVar(&metric.Lifetime, "dmax", 0, "The lifetime in seconds of this metric")
-	flag.StringVar(&metric.Group, "group", "", "Group(s) of the metric (comma-separated)")
 	flag.StringVar(&metric.Description, "desc", "", "Description of the metric")
 	flag.StringVar(&metric.Spoof, "spoof", "", "IP address and name of host/device (colon separated) we are spoofing")
 	flag.Parse()
@@ -38,6 +39,10 @@ func main() {
 		fmt.Fprintln(os.Stderr, "name, type and value are required")
 		flag.Usage()
 		os.Exit(2)
+	}
+
+	if *groups != "" {
+		metric.Groups = strings.Split(*groups, ",")
 	}
 
 	naddr, err := net.ResolveUDPAddr("udp", *addr)

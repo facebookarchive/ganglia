@@ -90,8 +90,8 @@ type Metric struct {
 	// Descriptions serve as documentation.
 	Description string
 
-	// The group ensures your metric is kept alongside sibling metrics.
-	Group string
+	// The groups ensures your metric is kept alongside sibling metrics.
+	Groups []string
 
 	// The units are shown in the graph to provide context to the numbers.
 	Units string
@@ -153,8 +153,8 @@ func (m *Metric) WriteMeta(w io.Writer) (err error) {
 	if m.Spoof != "" {
 		extras = append(extras, [2]string{"SPOOF_HOST", m.Spoof})
 	}
-	if m.Group != "" {
-		extras = append(extras, [2]string{"GROUP", m.Group})
+	for _, group := range m.Groups {
+		extras = append(extras, [2]string{"GROUP", group})
 	}
 	writeExtras(pw, extras)
 	return

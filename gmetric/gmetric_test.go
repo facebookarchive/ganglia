@@ -333,7 +333,7 @@ func TestExtras(t *testing.T) {
 		Title:        "the simple title",
 		Description:  "the simple description",
 		Host:         "localhost",
-		Group:        "simple_group",
+		Groups:       []string{"simple_group1", "simple_group2"},
 		ValueType:    gmetric.ValueString,
 		Units:        "count",
 		Slope:        gmetric.SlopeBoth,
@@ -359,7 +359,8 @@ func TestExtras(t *testing.T) {
 		Slope: "both",
 		ExtraData: gmon.ExtraData{
 			ExtraElements: []gmon.ExtraElement{
-				gmon.ExtraElement{Name: "GROUP", Val: m.Group},
+				gmon.ExtraElement{Name: "GROUP", Val: m.Groups[1]},
+				gmon.ExtraElement{Name: "GROUP", Val: m.Groups[0]},
 				gmon.ExtraElement{Name: "SPOOF_HOST", Val: m.Spoof},
 				gmon.ExtraElement{Name: "DESC", Val: m.Description},
 				gmon.ExtraElement{Name: "TITLE", Val: m.Title},
