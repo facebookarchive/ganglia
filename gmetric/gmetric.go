@@ -90,7 +90,7 @@ type Metric struct {
 	// Descriptions serve as documentation.
 	Description string
 
-	// The groups ensures your metric is kept alongside sibling metrics.
+	// The groups ensure your metric is kept alongside sibling metrics.
 	Groups []string
 
 	// The units are shown in the graph to provide context to the numbers.
