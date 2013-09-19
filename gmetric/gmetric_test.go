@@ -416,7 +416,7 @@ func TestWriteMetaWriterPanic(t *testing.T) {
 	t.Parallel()
 	defer func() {
 		if r := recover(); r != panicFixed {
-			t.Fatal("was expecting panicFixed but got %s", r)
+			t.Fatalf("was expecting panicFixed but got %s", r)
 		}
 	}()
 	m := &gmetric.Metric{
@@ -437,7 +437,7 @@ func TestWriteValueWriterPanic(t *testing.T) {
 	t.Parallel()
 	defer func() {
 		if r := recover(); r != panicFixed {
-			t.Fatal("was expecting panicFixed but got %s", r)
+			t.Fatalf("was expecting panicFixed but got %s", r)
 		}
 	}()
 	m := &gmetric.Metric{

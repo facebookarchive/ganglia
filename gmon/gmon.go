@@ -40,7 +40,7 @@ type Host struct {
 	Tmax         int      `xml:"TMAX,attr"`
 	Dmax         int      `xml:"DMAX,attr"`
 	Location     string   `xml:"LOCATION,attr"`
-	GmondStarted int      `xml:"GMOND_STARTED",attr"`
+	GmondStarted int      `xml:"GMOND_STARTED,attr"`
 	Metrics      []Metric `xml:"METRIC"`
 }
 
