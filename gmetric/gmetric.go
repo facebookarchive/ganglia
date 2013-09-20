@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"time"
 )
 
@@ -278,6 +279,10 @@ func (c *Client) WriteValue(m *Metric, val interface{}) error {
 func (c *Client) Open() error {
 	if len(c.Addr) == 0 {
 		return errNoAddrs
+	}
+
+	if c.Host == "" {
+		c.Host, _ = os.Hostname()
 	}
 
 	var errs MultiError
