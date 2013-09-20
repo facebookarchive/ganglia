@@ -74,7 +74,28 @@ func (m MultiError) Error() string {
 // itself a Writer which writes the given bytes to all open connections.
 type Client struct {
 	io.Writer
+
+	// The target addresses or in gmond.conf parlance the udp_send_channels.
 	Addr []net.Addr
+
+	// The actual hostname for the machine. If empty the default will be set
+	// based on os.Hostname.
+	Host string
+
+	// Optional spoof name for the machine. Since the default is reverse DNS this
+	// allows for overriding the hostname to make it useful.
+	Spoof string
+
+	// Also known as TMax, it defines the max time interval between which the
+	// daemon will expect updates. This should map to how often you publish the
+	// metric.
+	TickInterval time.Duration
+
+	// Also known as DMax, it defines the lifetime for the metric. That is, once
+	// the last received metric is older than the defined value it will become
+	// eligible for garbage collection.
+	Lifetime time.Duration
+
 	conn []net.Conn
 }
 
@@ -121,7 +142,7 @@ type Metric struct {
 }
 
 // Writes a metadata packet for the Metric.
-func (m *Metric) WriteMeta(w io.Writer) (err error) {
+func (m *Metric) writeMeta(c *Client, w io.Writer) (err error) {
 	pw := &panickyWriter{Writer: w}
 	defer func() {
 		if r := recover(); r != nil {
@@ -133,14 +154,26 @@ func (m *Metric) WriteMeta(w io.Writer) (err error) {
 		}
 	}()
 
-	writeUint32(pw, 128)
-	m.writeHead(pw)
+	writeUint32(pw, 128) // identifies meta
+	m.writeHead(c, pw)
 	writeString(pw, string(m.ValueType))
 	writeString(pw, m.Name)
 	writeString(pw, m.Units)
 	writeUint32(pw, m.Slope.value())
-	writeUint32(pw, uint32(m.TickInterval.Seconds()))
-	writeUint32(pw, uint32(m.Lifetime.Seconds()))
+
+	tick := m.TickInterval.Seconds()
+	if tick == 0 {
+		writeUint32(pw, uint32(c.TickInterval.Seconds()))
+	} else {
+		writeUint32(pw, uint32(tick))
+	}
+
+	life := m.Lifetime.Seconds()
+	if life == 0 {
+		writeUint32(pw, uint32(c.Lifetime.Seconds()))
+	} else {
+		writeUint32(pw, uint32(life))
+	}
 
 	var extras [][2]string
 	if m.Title != "" {
@@ -149,9 +182,15 @@ func (m *Metric) WriteMeta(w io.Writer) (err error) {
 	if m.Description != "" {
 		extras = append(extras, [2]string{"DESC", m.Description})
 	}
-	if m.Spoof != "" {
-		extras = append(extras, [2]string{"SPOOF_HOST", m.Spoof})
+
+	spoof := m.Spoof
+	if spoof == "" {
+		spoof = c.Spoof
 	}
+	if spoof != "" {
+		extras = append(extras, [2]string{"SPOOF_HOST", spoof})
+	}
+
 	for _, group := range m.Groups {
 		extras = append(extras, [2]string{"GROUP", group})
 	}
@@ -161,7 +200,7 @@ func (m *Metric) WriteMeta(w io.Writer) (err error) {
 
 // Writes a value packet for the given value. The value will be encoded based
 // on the configured ValueType.
-func (m *Metric) WriteValue(w io.Writer, val interface{}) (err error) {
+func (m *Metric) writeValue(c *Client, w io.Writer, val interface{}) (err error) {
 	pw := &panickyWriter{Writer: w}
 	defer func() {
 		if r := recover(); r != nil {
@@ -173,22 +212,32 @@ func (m *Metric) WriteValue(w io.Writer, val interface{}) (err error) {
 		}
 	}()
 
-	writeUint32(pw, 133)
-	m.writeHead(pw)
+	writeUint32(pw, 133) // identifies a value
+	m.writeHead(c, pw)
 	writeString(pw, "%s")
 	writeString(pw, fmt.Sprint(val))
 	return
 }
 
-func (m *Metric) writeHead(w io.Writer) {
-	spoof := m.Spoof != ""
-	if spoof {
-		writeString(w, m.Spoof)
+func (m *Metric) writeHead(c *Client, w io.Writer) {
+	host := m.Host
+	if host == "" {
+		host = c.Host
+	}
+
+	spoof := m.Spoof
+	if spoof == "" {
+		spoof = c.Spoof
+	}
+
+	hasSpoof := spoof != ""
+	if hasSpoof {
+		writeString(w, spoof)
 	} else {
-		writeString(w, m.Host)
+		writeString(w, host)
 	}
 	writeString(w, m.Name)
-	if spoof {
+	if hasSpoof {
 		writeUint32(w, 1)
 	} else {
 		writeUint32(w, 0)
@@ -201,7 +250,7 @@ func (c *Client) WriteMeta(m *Metric) error {
 		return errNotOpen
 	}
 	var buf bytes.Buffer
-	if err := m.WriteMeta(&buf); err != nil {
+	if err := m.writeMeta(c, &buf); err != nil {
 		return err
 	}
 	if _, err := c.Write(buf.Bytes()); err != nil {
@@ -216,7 +265,7 @@ func (c *Client) WriteValue(m *Metric, val interface{}) error {
 		return errNotOpen
 	}
 	var buf bytes.Buffer
-	if err := m.WriteValue(&buf, val); err != nil {
+	if err := m.writeValue(c, &buf, val); err != nil {
 		return err
 	}
 	if _, err := c.Write(buf.Bytes()); err != nil {

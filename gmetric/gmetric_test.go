@@ -1,7 +1,6 @@
 package gmetric_test
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -62,22 +61,6 @@ func init() {
 	if configTemplateErr != nil {
 		panic(configTemplateErr)
 	}
-}
-
-var errFixed = errors.New("fixed error")
-
-type errWriter int
-
-func (e errWriter) Write(b []byte) (int, error) {
-	return 0, errFixed
-}
-
-var panicFixed = "foo42"
-
-type panicWriter int
-
-func (e panicWriter) Write(b []byte) (int, error) {
-	panic(panicFixed)
 }
 
 type harness struct {
@@ -380,80 +363,6 @@ func TestNoAddrs(t *testing.T) {
 	}
 }
 
-func TestWriteMetaWriterError(t *testing.T) {
-	t.Parallel()
-	m := &gmetric.Metric{
-		Name:         "write_meta_panic_metric",
-		Host:         "localhost",
-		ValueType:    gmetric.ValueUint32,
-		Units:        "count",
-		Slope:        gmetric.SlopeBoth,
-		TickInterval: 20 * time.Second,
-		Lifetime:     24 * time.Hour,
-	}
-	if err := m.WriteMeta(errWriter(0)); err != errFixed {
-		t.Fatalf("was expecting errFixed but got %s", err)
-	}
-}
-
-func TestWriteValueWriterError(t *testing.T) {
-	t.Parallel()
-	m := &gmetric.Metric{
-		Name:         "string_metric",
-		Host:         "localhost",
-		ValueType:    gmetric.ValueString,
-		Units:        "count",
-		Slope:        gmetric.SlopeBoth,
-		TickInterval: 20 * time.Second,
-		Lifetime:     24 * time.Hour,
-	}
-	if err := m.WriteValue(errWriter(0), "val"); err != errFixed {
-		t.Fatalf("was expecting errFixed but got %s", err)
-	}
-}
-
-func TestWriteMetaWriterPanic(t *testing.T) {
-	t.Parallel()
-	defer func() {
-		if r := recover(); r != panicFixed {
-			t.Fatalf("was expecting panicFixed but got %s", r)
-		}
-	}()
-	m := &gmetric.Metric{
-		Name:         "write_meta_panic_metric",
-		Host:         "localhost",
-		ValueType:    gmetric.ValueUint32,
-		Units:        "count",
-		Slope:        gmetric.SlopeBoth,
-		TickInterval: 20 * time.Second,
-		Lifetime:     24 * time.Hour,
-	}
-	if err := m.WriteMeta(panicWriter(0)); err != errFixed {
-		t.Fatalf("was expecting errFixed but got %s", err)
-	}
-}
-
-func TestWriteValueWriterPanic(t *testing.T) {
-	t.Parallel()
-	defer func() {
-		if r := recover(); r != panicFixed {
-			t.Fatalf("was expecting panicFixed but got %s", r)
-		}
-	}()
-	m := &gmetric.Metric{
-		Name:         "string_metric",
-		Host:         "localhost",
-		ValueType:    gmetric.ValueString,
-		Units:        "count",
-		Slope:        gmetric.SlopeBoth,
-		TickInterval: 20 * time.Second,
-		Lifetime:     24 * time.Hour,
-	}
-	if err := m.WriteValue(panicWriter(0), "val"); err != errFixed {
-		t.Fatalf("was expecting errFixed but got %s", err)
-	}
-}
-
 func TestNotOpen(t *testing.T) {
 	t.Parallel()
 	c := &gmetric.Client{}
@@ -468,4 +377,146 @@ func TestNotOpen(t *testing.T) {
 	if err := c.WriteValue(m, "val"); err == nil {
 		t.Fatalf("was expecting an error")
 	}
+}
+
+func TestLifetimeFromClient(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	h.Client.Lifetime = 24 * time.Hour
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name:         "lifetime_from_client_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueUint8,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+	}
+	const val = 10
+
+	if err := h.Client.WriteMeta(m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := h.Client.WriteValue(m, val); err != nil {
+		t.Fatal(err)
+	}
+
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Value: fmt.Sprint(val),
+		Unit:  m.Units,
+		Tn:    1,
+		Tmax:  20,
+		Slope: "both",
+	})
+}
+
+func TestTickIntervalFromClient(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	h.Client.TickInterval = 20 * time.Second
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name:      "tick_interval_from_client_metric",
+		Host:      "localhost",
+		ValueType: gmetric.ValueUint8,
+		Units:     "count",
+		Slope:     gmetric.SlopeBoth,
+		Lifetime:  24 * time.Hour,
+	}
+	const val = 10
+
+	if err := h.Client.WriteMeta(m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := h.Client.WriteValue(m, val); err != nil {
+		t.Fatal(err)
+	}
+
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Value: fmt.Sprint(val),
+		Unit:  m.Units,
+		Tn:    1,
+		Tmax:  20,
+		Slope: "both",
+	})
+}
+
+func TestHostnameFromClient(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	h.Client.Host = "localhost"
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name:         "hostname_from_client_metric",
+		ValueType:    gmetric.ValueUint8,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	const val = 10
+
+	if err := h.Client.WriteMeta(m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := h.Client.WriteValue(m, val); err != nil {
+		t.Fatal(err)
+	}
+
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Value: fmt.Sprint(val),
+		Unit:  m.Units,
+		Tn:    1,
+		Tmax:  20,
+		Slope: "both",
+	})
+}
+
+func TestSpoofFromClient(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	h.Client.Spoof = "127.0.0.1:localhost_spoof"
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name:         "spoof_from_client_metric",
+		Host:         "localhost",
+		ValueType:    gmetric.ValueString,
+		Units:        "count",
+		Slope:        gmetric.SlopeBoth,
+		TickInterval: 20 * time.Second,
+		Lifetime:     24 * time.Hour,
+	}
+	const val = "hello"
+
+	if err := h.Client.WriteMeta(m); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := h.Client.WriteValue(m, val); err != nil {
+		t.Fatal(err)
+	}
+
+	h.ContainsMetric(&gmon.Metric{
+		Name:  m.Name,
+		Unit:  m.Units,
+		Value: val,
+		Tn:    1,
+		Tmax:  20,
+		Slope: "both",
+		ExtraData: gmon.ExtraData{
+			ExtraElements: []gmon.ExtraElement{
+				gmon.ExtraElement{Name: "SPOOF_HOST", Val: h.Client.Spoof},
+			},
+		},
+	})
 }
