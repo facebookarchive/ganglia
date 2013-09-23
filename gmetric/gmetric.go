@@ -22,11 +22,10 @@ type slopeType string
 
 // The slope types supported by Ganglia.
 const (
-	SlopeUnspecified = slopeType("")
-	SlopeZero        = slopeType("zero")
-	SlopePositive    = slopeType("positive")
-	SlopeNegative    = slopeType("negative")
-	SlopeBoth        = slopeType("both")
+	SlopeZero     = slopeType("zero")
+	SlopePositive = slopeType("positive")
+	SlopeNegative = slopeType("negative")
+	SlopeBoth     = slopeType("both")
 )
 
 func (s slopeType) value() uint32 {
