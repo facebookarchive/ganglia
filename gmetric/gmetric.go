@@ -15,6 +15,7 @@ var (
 	zeroByte   = []byte{byte(0)}
 	errNoAddrs = errors.New("gmetric: no addrs provided")
 	errNotOpen = errors.New("gmetric: client not opened")
+	errNoName  = errors.New("gmetric: metric has no name")
 )
 
 type slopeType string
@@ -250,6 +251,9 @@ func (c *Client) WriteMeta(m *Metric) error {
 	if c.Writer == nil {
 		return errNotOpen
 	}
+	if m.Name == "" {
+		return errNoName
+	}
 	var buf bytes.Buffer
 	if err := m.writeMeta(c, &buf); err != nil {
 		return err
@@ -264,6 +268,9 @@ func (c *Client) WriteMeta(m *Metric) error {
 func (c *Client) WriteValue(m *Metric, val interface{}) error {
 	if c.Writer == nil {
 		return errNotOpen
+	}
+	if m.Name == "" {
+		return errNoName
 	}
 	var buf bytes.Buffer
 	if err := m.writeValue(c, &buf, val); err != nil {

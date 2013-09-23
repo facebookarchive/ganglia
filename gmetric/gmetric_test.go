@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 	"text/template"
 	"time"
@@ -167,6 +168,15 @@ func newHarness(t *testing.T) *harness {
 	h := &harness{T: t}
 	h.Start()
 	return h
+}
+
+func errContains(t *testing.T, err error, str string) {
+	if err == nil {
+		t.Fatalf(`was expecting error with "%s" but got nil error`, str)
+	}
+	if !strings.Contains(err.Error(), str) {
+		t.Fatalf(`was expecting error with "%s" but got "%s"`, str, err.Error())
+	}
 }
 
 func TestUint8Metric(t *testing.T) {
@@ -355,12 +365,8 @@ func TestExtras(t *testing.T) {
 func TestNoAddrs(t *testing.T) {
 	t.Parallel()
 	c := &gmetric.Client{}
-	if c.Open() == nil {
-		t.Fatal("was expecting an error")
-	}
-	if c.Close() == nil {
-		t.Fatal("was expecting an error")
-	}
+	errContains(t, c.Open(), "gmetric: no addrs provided")
+	errContains(t, c.Close(), "gmetric: no addrs provided")
 }
 
 func TestNotOpen(t *testing.T) {
@@ -371,12 +377,8 @@ func TestNotOpen(t *testing.T) {
 		Host:      "localhost",
 		ValueType: gmetric.ValueString,
 	}
-	if err := c.WriteMeta(m); err == nil {
-		t.Fatalf("was expecting an error")
-	}
-	if err := c.WriteValue(m, "val"); err == nil {
-		t.Fatalf("was expecting an error")
-	}
+	errContains(t, c.WriteMeta(m), "gmetric: client not opened")
+	errContains(t, c.WriteValue(m, "val"), "gmetric: client not opened")
 }
 
 func TestLifetimeFromClient(t *testing.T) {
@@ -519,4 +521,14 @@ func TestSpoofFromClient(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestNoName(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	defer h.Stop()
+
+	m := &gmetric.Metric{}
+	errContains(t, h.Client.WriteMeta(m), "gmetric: metric has no name")
+	errContains(t, h.Client.WriteValue(m, "val"), "gmetric: metric has no name")
 }
