@@ -532,3 +532,15 @@ func TestNoName(t *testing.T) {
 	errContains(t, h.Client.WriteMeta(m), "gmetric: metric has no name")
 	errContains(t, h.Client.WriteValue(m, "val"), "gmetric: metric has no name")
 }
+
+func TestNoValueType(t *testing.T) {
+	t.Parallel()
+	h := newHarness(t)
+	defer h.Stop()
+
+	m := &gmetric.Metric{
+		Name: "no_value_type_metric",
+	}
+	errContains(t, h.Client.WriteMeta(m), "gmetric: metric has no ValueType")
+	errContains(t, h.Client.WriteValue(m, "val"), "gmetric: metric has no ValueType")
+}

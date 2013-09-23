@@ -12,10 +12,11 @@ import (
 )
 
 var (
-	zeroByte   = []byte{byte(0)}
-	errNoAddrs = errors.New("gmetric: no addrs provided")
-	errNotOpen = errors.New("gmetric: client not opened")
-	errNoName  = errors.New("gmetric: metric has no name")
+	zeroByte       = []byte{byte(0)}
+	errNoAddrs     = errors.New("gmetric: no addrs provided")
+	errNotOpen     = errors.New("gmetric: client not opened")
+	errNoName      = errors.New("gmetric: metric has no name")
+	errNoValueType = errors.New("gmetric: metric has no ValueType")
 )
 
 type slopeType string
@@ -251,6 +252,9 @@ func (c *Client) writeCheck(m *Metric) error {
 	}
 	if m.Name == "" {
 		return errNoName
+	}
+	if string(m.ValueType) == "" {
+		return errNoValueType
 	}
 	return nil
 }
