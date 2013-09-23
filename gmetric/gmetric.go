@@ -245,13 +245,20 @@ func (m *Metric) writeHead(c *Client, w io.Writer) {
 	}
 }
 
-// Write the Metric metadata.
-func (c *Client) WriteMeta(m *Metric) error {
+func (c *Client) writeCheck(m *Metric) error {
 	if c.Writer == nil {
 		return errNotOpen
 	}
 	if m.Name == "" {
 		return errNoName
+	}
+	return nil
+}
+
+// Write the Metric metadata.
+func (c *Client) WriteMeta(m *Metric) error {
+	if err := c.writeCheck(m); err != nil {
+		return err
 	}
 	var buf bytes.Buffer
 	if err := m.writeMeta(c, &buf); err != nil {
@@ -265,11 +272,8 @@ func (c *Client) WriteMeta(m *Metric) error {
 
 // Write a value for the Metric.
 func (c *Client) WriteValue(m *Metric, val interface{}) error {
-	if c.Writer == nil {
-		return errNotOpen
-	}
-	if m.Name == "" {
-		return errNoName
+	if err := c.writeCheck(m); err != nil {
+		return err
 	}
 	var buf bytes.Buffer
 	if err := m.writeValue(c, &buf, val); err != nil {
