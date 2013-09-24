@@ -72,8 +72,8 @@ type Harness struct {
 	Client     *gmetric.Client
 	t          *testing.T
 	port       int
-	ConfigPath string
-	Cmd        *exec.Cmd
+	configPath string
+	cmd        *exec.Cmd
 }
 
 func (h *Harness) start() {
@@ -88,7 +88,7 @@ func (h *Harness) start() {
 	if err != nil {
 		h.t.Fatal(err)
 	}
-	h.ConfigPath = cf.Name()
+	h.configPath = cf.Name()
 
 	td := struct{ Port int }{Port: h.port}
 	if err := configTemplate.Execute(cf, td); err != nil {
@@ -99,10 +99,10 @@ func (h *Harness) start() {
 		h.t.Fatal(err)
 	}
 
-	h.Cmd = exec.Command("gmond", "--conf", h.ConfigPath)
-	h.Cmd.Stderr = os.Stderr
-	h.Cmd.Stdout = os.Stdout
-	if err := h.Cmd.Start(); err != nil {
+	h.cmd = exec.Command("gmond", "--conf", h.configPath)
+	h.cmd.Stderr = os.Stderr
+	h.cmd.Stdout = os.Stdout
+	if err := h.cmd.Start(); err != nil {
 		h.t.Fatal(err)
 	}
 
@@ -132,11 +132,11 @@ func (h *Harness) Stop() {
 		h.t.Fatal(err)
 	}
 
-	if err := h.Cmd.Process.Kill(); err != nil {
+	if err := h.cmd.Process.Kill(); err != nil {
 		h.t.Fatal(err)
 	}
 
-	if err := os.Remove(h.ConfigPath); err != nil {
+	if err := os.Remove(h.configPath); err != nil {
 		h.t.Fatal(err)
 	}
 }
