@@ -13,6 +13,7 @@ import (
 
 	"github.com/daaku/go.freeport"
 	"github.com/daaku/go.subset"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/daaku/go.ganglia/gmetric"
 	"github.com/daaku/go.ganglia/gmon"
@@ -167,7 +168,7 @@ func (h *Harness) ContainsMetric(m *gmon.Metric) {
 		}
 
 		if time.Now().After(deadline) {
-			h.t.Fatalf("did not find metric %+v in\n%+v", m, g)
+			h.t.Fatalf("did not find metric\n%s\n--in--\n%s", spew.Sdump(m), spew.Sdump(g))
 		}
 	}
 }
