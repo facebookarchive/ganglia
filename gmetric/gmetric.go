@@ -4,11 +4,14 @@ package gmetric
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"fmt"
 	"io"
 	"net"
 	"os"
 	"time"
+
+	"github.com/daaku/go.flag.addrs"
 )
 
 var (
@@ -335,6 +338,44 @@ func (c *Client) Close() error {
 		return nil
 	}
 	return errs
+}
+
+// Define a new Client via Flags. Note you must call client.Open() before using
+// it.
+func ClientFlag(name string) *Client {
+	c := &Client{}
+	hostname, _ := os.Hostname()
+	flag.StringVar(
+		&c.Host,
+		name+".host",
+		hostname,
+		"hostname for ganglia",
+	)
+	flag.StringVar(
+		&c.Spoof,
+		name+".spoof",
+		"",
+		"spoof hostname for ganglia",
+	)
+	flag.DurationVar(
+		&c.TickInterval,
+		name+".tick-interval",
+		time.Minute,
+		"tick interval for ganglia",
+	)
+	flag.DurationVar(
+		&c.Lifetime,
+		name+".lifetime",
+		time.Hour*24*30, // 30 days
+		"metrics lifetime for ganglia",
+	)
+	addrs.FlagManyVar(
+		&c.Addr,
+		name+".addrs",
+		"udp:127.0.0.1:8649",
+		"comma separated list of net:host:port triples of ganglia leaf nodes",
+	)
+	return c
 }
 
 func writeUint32(w io.Writer, val uint32) {

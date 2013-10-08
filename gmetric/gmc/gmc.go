@@ -5,7 +5,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net"
 	"os"
 	"strings"
 	"time"
@@ -13,19 +12,15 @@ import (
 	"github.com/daaku/go.ganglia/gmetric"
 )
 
-func hostname() string {
-	h, _ := os.Hostname()
-	return h
-}
-
 func main() {
-	addr := flag.String("addr", "127.0.0.1:8649", "target udp address")
+	hostname, _ := os.Hostname()
+	client := gmetric.ClientFlag("ganglia")
 	value := flag.String("value", "", "Value of the metric")
 	groups := flag.String("group", "", "Group(s) of the metric (comma-separated)")
 	metric := &gmetric.Metric{}
 	flag.StringVar(&metric.Name, "name", "", "Name of the metric")
 	flag.StringVar(&metric.Title, "title", "", "Title of the metric")
-	flag.StringVar(&metric.Host, "host", hostname(), "Hostname")
+	flag.StringVar(&metric.Host, "host", hostname, "Hostname")
 	flag.StringVar((*string)(&metric.ValueType), "type", "", "Either string|int8|uint8|int16|uint16|int32|uint32|float|double")
 	flag.StringVar(&metric.Units, "units", "", "Unit of measure for the value e.g. Kilobytes, Celcius")
 	flag.StringVar((*string)(&metric.Slope), "slope", "both", "Either zero|positive|negative|both")
@@ -45,13 +40,6 @@ func main() {
 		metric.Groups = strings.Split(*groups, ",")
 	}
 
-	naddr, err := net.ResolveUDPAddr("udp", *addr)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(2)
-	}
-
-	client := &gmetric.Client{Addr: []net.Addr{naddr}}
 	if err := client.Open(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
