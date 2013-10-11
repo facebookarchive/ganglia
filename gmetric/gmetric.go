@@ -342,7 +342,7 @@ func (c *Client) Close() error {
 
 // Define a new Client via Flags. Note you must call client.Open() before using
 // it.
-func ClientFlag(name string) *Client {
+func ClientFromFlag(name string) *Client {
 	c := &Client{}
 	hostname, _ := os.Hostname()
 	flag.StringVar(

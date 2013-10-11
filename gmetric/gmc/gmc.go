@@ -14,7 +14,7 @@ import (
 
 func main() {
 	hostname, _ := os.Hostname()
-	client := gmetric.ClientFlag("ganglia")
+	client := gmetric.ClientFromFlag("ganglia")
 	value := flag.String("value", "", "Value of the metric")
 	groups := flag.String("group", "", "Group(s) of the metric (comma-separated)")
 	metric := &gmetric.Metric{}
