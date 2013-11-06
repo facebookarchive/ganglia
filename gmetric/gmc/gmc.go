@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/daaku/go.ganglia/gmetric"
+	"github.com/ParsePlatform/go.ganglia/gmetric"
 )
 
 func main() {

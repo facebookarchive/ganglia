@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/daaku/go.ganglia/gmetric"
-	"github.com/daaku/go.ganglia/gmon"
-	"github.com/daaku/go.ganglia/gmondtest"
+	"github.com/ParsePlatform/go.ganglia/gmetric"
+	"github.com/ParsePlatform/go.ganglia/gmon"
+	"github.com/ParsePlatform/go.ganglia/gmondtest"
 )
 
 func errContains(t *testing.T, err error, str string) {

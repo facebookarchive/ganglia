@@ -11,7 +11,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/daaku/go.flag.addrs"
+	"github.com/ParsePlatform/go.flag.addrs"
 )
 
 var (

@@ -11,12 +11,12 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/daaku/go.freeport"
-	"github.com/daaku/go.subset"
+	"github.com/ParsePlatform/go.freeport"
+	"github.com/ParsePlatform/go.subset"
 	"github.com/davecgh/go-spew/spew"
 
-	"github.com/daaku/go.ganglia/gmetric"
-	"github.com/daaku/go.ganglia/gmon"
+	"github.com/ParsePlatform/go.ganglia/gmetric"
+	"github.com/ParsePlatform/go.ganglia/gmon"
 )
 
 const localhostIP = "127.0.0.1"
