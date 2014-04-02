@@ -3,6 +3,7 @@ package gmondtest
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -11,13 +12,16 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/ParsePlatform/go.freeport"
-	"github.com/ParsePlatform/go.subset"
 	"github.com/davecgh/go-spew/spew"
+	"github.com/facebookgo/freeport"
+	"github.com/facebookgo/subset"
+	"github.com/facebookgo/waitout"
 
-	"github.com/ParsePlatform/go.ganglia/gmetric"
-	"github.com/ParsePlatform/go.ganglia/gmon"
+	"github.com/facebookgo/ganglia/gmetric"
+	"github.com/facebookgo/ganglia/gmon"
 )
+
+var gmondServerStarted = []byte("Starting TCP listener thread")
 
 const localhostIP = "127.0.0.1"
 
@@ -25,7 +29,7 @@ var configTemplate, configTemplateErr = template.New("config").Parse(`
 globals {
   daemonize = no
   setuid = false
-  debug_level = 0
+  debug_level = 2
   max_udp_msg_len = 1472
   mute = no
   deaf = no
@@ -70,11 +74,12 @@ func init() {
 // ensure you 'defer h.Stop()' to shutdown the gmond server once the test has
 // finished.
 type Harness struct {
-	Client     *gmetric.Client
-	t          *testing.T
-	port       int
-	configPath string
-	cmd        *exec.Cmd
+	Client      *gmetric.Client
+	StopTimeout time.Duration
+	t           *testing.T
+	port        int
+	configPath  string
+	cmd         *exec.Cmd
 }
 
 func (h *Harness) start() {
@@ -100,21 +105,14 @@ func (h *Harness) start() {
 		h.t.Fatal(err)
 	}
 
+	waiter := waitout.New(gmondServerStarted)
 	h.cmd = exec.Command("gmond", "--conf", h.configPath)
-	h.cmd.Stderr = os.Stderr
+	h.cmd.Stderr = io.MultiWriter(os.Stderr, waiter)
 	h.cmd.Stdout = os.Stdout
 	if err := h.cmd.Start(); err != nil {
 		h.t.Fatal(err)
 	}
-
-	// Wait until TCP socket is active to ensure we don't progress until the
-	// server is ready to accept.
-	for {
-		if c, err := net.Dial("tcp", fmt.Sprintf("%s:%d", localhostIP, h.port)); err == nil {
-			c.Close()
-			break
-		}
-	}
+	waiter.Wait()
 
 	h.Client = &gmetric.Client{
 		Addr: []net.Addr{
@@ -129,16 +127,24 @@ func (h *Harness) start() {
 
 // Stop the associated gmond server.
 func (h *Harness) Stop() {
-	if err := h.Client.Close(); err != nil {
-		h.t.Fatal(err)
-	}
+	fin := make(chan struct{})
+	go func() {
+		defer close(fin)
+		if err := h.Client.Close(); err != nil {
+			h.t.Fatal(err)
+		}
 
-	if err := h.cmd.Process.Kill(); err != nil {
-		h.t.Fatal(err)
-	}
+		if err := h.cmd.Process.Kill(); err != nil {
+			h.t.Fatal(err)
+		}
 
-	if err := os.Remove(h.configPath); err != nil {
-		h.t.Fatal(err)
+		if err := os.Remove(h.configPath); err != nil {
+			h.t.Fatal(err)
+		}
+	}()
+	select {
+	case <-fin:
+	case <-time.After(h.StopTimeout):
 	}
 }
 
@@ -176,7 +182,10 @@ func (h *Harness) ContainsMetric(m *gmon.Metric) {
 // Create a new Harness. It will start the server and initialize the container
 // Client.
 func NewHarness(t *testing.T) *Harness {
-	h := &Harness{t: t}
+	h := &Harness{
+		t:           t,
+		StopTimeout: 15 * time.Second,
+	}
 	h.start()
 	return h
 }

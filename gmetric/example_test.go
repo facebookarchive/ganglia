@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/ParsePlatform/go.ganglia/gmetric"
+	"github.com/facebookgo/ganglia/gmetric"
 )
 
 func Example() {

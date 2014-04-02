@@ -1,6 +1,6 @@
-go.ganglia [![Build Status](https://secure.travis-ci.org/ParsePlatform/go.ganglia.png)](http://travis-ci.org/ParsePlatform/go.ganglia)
-==========
+ganglia [![Build Status](https://secure.travis-ci.org/facebookgo/ganglia.png)](http://travis-ci.org/facebookgo/ganglia)
+=======
 
-gmetric: http://godoc.org/github.com/ParsePlatform/go.ganglia/gmetric
+gmetric: http://godoc.org/github.com/facebookgo/ganglia/gmetric
 
-gmon: http://godoc.org/github.com/ParsePlatform/go.ganglia/gmon
+gmon: http://godoc.org/github.com/facebookgo/ganglia/gmon
