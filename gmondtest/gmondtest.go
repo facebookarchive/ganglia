@@ -107,8 +107,12 @@ func (h *Harness) start() {
 
 	waiter := waitout.New(gmondServerStarted)
 	h.cmd = exec.Command("gmond", "--conf", h.configPath)
-	h.cmd.Stderr = io.MultiWriter(os.Stderr, waiter)
-	h.cmd.Stdout = os.Stdout
+	if os.Getenv("GMONDTEST_VERBOSE") == "1" {
+		h.cmd.Stderr = io.MultiWriter(os.Stderr, waiter)
+		h.cmd.Stdout = os.Stdout
+	} else {
+		h.cmd.Stderr = waiter
+	}
 	if err := h.cmd.Start(); err != nil {
 		h.t.Fatal(err)
 	}
