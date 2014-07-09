@@ -186,10 +186,20 @@ func (h *Harness) ContainsMetric(m *gmon.Metric) {
 // Create a new Harness. It will start the server and initialize the container
 // Client.
 func NewHarness(t *testing.T) *Harness {
-	h := &Harness{
-		t:           t,
-		StopTimeout: 15 * time.Second,
+	for {
+		h := &Harness{
+			t:           t,
+			StopTimeout: 15 * time.Second,
+		}
+		start := make(chan struct{})
+		go func() {
+			defer close(start)
+			h.start()
+		}()
+		select {
+		case <-start:
+			return h
+		case <-time.After(5 * time.Second):
+		}
 	}
-	h.start()
-	return h
 }
