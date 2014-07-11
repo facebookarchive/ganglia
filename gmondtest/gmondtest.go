@@ -152,7 +152,7 @@ func (h *Harness) Stop() {
 	}
 }
 
-// Returns the current state of the associated gmond instance.
+// State returns the current state of the associated gmond instance.
 func (h *Harness) State() *gmon.Ganglia {
 	addr := fmt.Sprintf("%s:%d", localhostIP, h.port)
 	ganglia, err := gmon.RemoteRead("tcp", addr)
@@ -162,7 +162,8 @@ func (h *Harness) State() *gmon.Ganglia {
 	return ganglia
 }
 
-// Check if associated gmond instance contains the given metric.
+// ContainsMetric checks if associated gmond instance contains the given
+// metric.
 func (h *Harness) ContainsMetric(m *gmon.Metric) {
 	deadline := time.Now().Add(5 * time.Second)
 	for {
@@ -183,8 +184,8 @@ func (h *Harness) ContainsMetric(m *gmon.Metric) {
 	}
 }
 
-// Create a new Harness. It will start the server and initialize the container
-// Client.
+// NewHarness creates a new Harness. It will start the server and initialize
+// the container Client.
 func NewHarness(t *testing.T) *Harness {
 	for {
 		h := &Harness{

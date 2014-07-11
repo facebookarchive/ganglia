@@ -61,7 +61,7 @@ const (
 	ValueFloat64 = valueType("double")
 )
 
-// Represents a collection of errors.
+// MultiError represents a collection of errors.
 type MultiError []error
 
 // Returns a concatenation of all the contained errors.
@@ -104,7 +104,7 @@ type Client struct {
 	conn []net.Conn
 }
 
-// Defines a Metric.
+// Metric configuration.
 type Metric struct {
 	// The name is used as the file name, and also the title unless one is
 	// explicitly provided.
@@ -262,7 +262,7 @@ func (c *Client) writeCheck(m *Metric) error {
 	return nil
 }
 
-// Write the Metric metadata.
+// WriteMeta writes the Metric metadata.
 func (c *Client) WriteMeta(m *Metric) error {
 	if err := c.writeCheck(m); err != nil {
 		return err
@@ -277,7 +277,7 @@ func (c *Client) WriteMeta(m *Metric) error {
 	return nil
 }
 
-// Write a value for the Metric.
+// WriteValue writes a value for the Metric.
 func (c *Client) WriteValue(m *Metric, val interface{}) error {
 	if err := c.writeCheck(m); err != nil {
 		return err
@@ -340,8 +340,8 @@ func (c *Client) Close() error {
 	return errs
 }
 
-// Define a new Client via Flags. Note you must call client.Open() before using
-// it.
+// ClientFromFlag defines a new Client via Flags. Note you must call
+// client.Open() before using it.
 func ClientFromFlag(name string) *Client {
 	c := &Client{}
 	hostname, _ := os.Hostname()
